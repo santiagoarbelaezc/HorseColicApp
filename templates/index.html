@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EquineHealth AI</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+    <link rel="manifest" href="/static/manifest.json">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+
+        .input-clinical {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .input-clinical:focus {
+            border-color: #000000;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+            outline: none;
+        }
+
+        .btn-predict {
+            background: #000000;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-predict:hover {
+            background: #1e293b;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-predict:active {
+            transform: scale(0.98);
+        }
+
+        .loader {
+            border-top-color: #000000;
+            animation: spinner 0.8s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .result-animate {
+            animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-white selection:bg-black selection:text-white">
+
+    <!-- Main Wrapper -->
+    <div class="max-w-2xl mx-auto px-4 sm:px-6">
+
+        <!-- Header -->
+        <header class="pt-8 pb-6 text-center">
+            <div
+                class="inline-flex items-center justify-center w-24 h-24 bg-slate-50 rounded-3xl mb-4 border border-slate-100 shadow-sm">
+                <i class="fas fa-horse-head text-black text-5xl"></i>
+            </div>
+            <h1 class="text-4xl font-black tracking-tight text-black sm:text-5xl">EquineHealth AI</h1>
+            <p class="text-slate-500 mt-2 text-base font-medium">Diagnóstico predictivo de de cólicos equinos</p>
+        </header>
+
+        <main>
+            <!-- Form Container -->
+            <div id="form-container"
+                class="bg-white border border-slate-100 rounded-[32px] p-6 sm:p-10 shadow-xl shadow-slate-200/50">
+                <h2 class="text-xl font-bold mb-8 flex items-center text-black">
+                    <span class="w-2 h-8 bg-black rounded-full mr-3"></span>
+                    Evaluación Clínica
+                </h2>
+
+                <form id="prediction-form">
+                    <!-- Numeric Grid -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                        <!-- Pulso -->
+                        <div>
+                            <label
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 block">Pulso
+                                (latidos/min)</label>
+                            <input type="number" name="pulso" placeholder="Ej. 60" required
+                                class="w-full input-clinical rounded-2xl px-5 py-3.5 text-slate-900 font-medium">
+                        </div>
+
+                        <!-- Temperatura -->
+                        <div>
+                            <label
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 block">Temp.
+                                Rectal (°C)</label>
+                            <input type="number" step="0.1" name="temp_rectal" placeholder="Ej. 38.5" required
+                                class="w-full input-clinical rounded-2xl px-5 py-3.5 text-slate-900 font-medium">
+                        </div>
+
+                        <!-- Volumen Celular -->
+                        <div>
+                            <label
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 block">Volumen
+                                Celular (PCV %)</label>
+                            <input type="number" name="volumen_celular" placeholder="Ej. 45" required
+                                class="w-full input-clinical rounded-2xl px-5 py-3.5 text-slate-900 font-medium">
+                        </div>
+
+                        <!-- Proteína Total -->
+                        <div>
+                            <label
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 block">Proteína
+                                Total (g/dL)</label>
+                            <input type="number" step="0.1" name="proteina_total" placeholder="Ej. 6.5" required
+                                class="w-full input-clinical rounded-2xl px-5 py-3.5 text-slate-900 font-medium">
+                        </div>
+                    </div>
+
+                    <!-- Selectors Group -->
+                    <div class="mt-6 space-y-5">
+                        <div>
+                            <label
+                                class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 block">Nivel
+                                de Dolor Percibido</label>
+                            <select name="dolor"
+                                class="w-full input-clinical rounded-2xl px-5 py-3.5 text-slate-900 font-medium appearance-none">
+                                <option value="1">1 - Alerta / Sin dolor aparente</option>
+                                <option value="2">2 - Deprimido / Letárgico</option>
+                                <option value="3">3 - Dolor intermitente leve</option>
+                                <option value="4">4 - Dolor intermitente severo</option>
+                                <option value="5">5 - Dolor continuo severo</option>
+                            </select>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label
+                                    class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 block">Edad</label>
+                                <select name="edad"
+                                    class="w-full input-clinical rounded-2xl px-5 py-3.5 text-slate-900 font-medium appearance-none">
+                                    <option value="1">Adulto</option>
+                                    <option value="2">Joven / Potro</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label
+                                    class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.1em] mb-2 block">Cirugía</label>
+                                <select name="lesion_quirurgica"
+                                    class="w-full input-clinical rounded-2xl px-5 py-3.5 text-slate-900 font-medium appearance-none">
+                                    <option value="1">Sí (Quirúrgica)</option>
+                                    <option value="2">No (Médica)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full btn-predict rounded-2xl py-5 font-bold text-white text-lg tracking-wide mt-10 shadow-xl shadow-slate-200">
+                        ANALIZAR CASO CLÍNICO
+                    </button>
+                </form>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loading" class="hidden text-center py-16">
+                <div
+                    class="loader ease-linear rounded-full border-[3px] border-t-[3px] border-slate-100 h-16 w-16 mb-6 mx-auto">
+                </div>
+                <p class="text-black font-bold text-xl animate-pulse">Agente IA analizando...</p>
+                <p class="text-slate-400 text-sm mt-1">Generando informe veterinario detallado</p>
+            </div>
+
+            <!-- Result Container -->
+            <div id="result-container" class="hidden space-y-6 pt-2 pb-16">
+                <div class="bg-black text-white p-10 rounded-[32px] shadow-2xl relative overflow-hidden"
+                    id="prediction-badge">
+                    <div class="relative z-10">
+                        <p class="text-[11px] text-slate-400 uppercase font-black tracking-[0.2em] mb-2">Diagnóstico
+                            Predicho</p>
+                        <h3 id="prediction-text" class="text-5xl font-black italic tracking-tighter">--</h3>
+                    </div>
+                    <!-- Decorative element -->
+                    <div class="absolute -right-8 -bottom-8 opacity-10">
+                        <i class="fas fa-microscope text-9xl"></i>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-100 p-8 sm:p-10 rounded-[32px]">
+                    <div class="flex items-center mb-6 text-black">
+                        <div class="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center mr-4">
+                            <i class="fas fa-robot text-sm"></i>
+                        </div>
+                        <span class="text-lg font-extrabold tracking-tight">Informe del Agente LLaMA</span>
+                    </div>
+                    <div id="agent-report" class="text-slate-700 text-base leading-relaxed font-medium">
+                        --
+                    </div>
+                    <button onclick="resetForm()"
+                        class="mt-10 w-full bg-white border border-slate-200 text-black py-4 rounded-2xl font-bold hover:bg-slate-50 transition-colors flex items-center justify-center">
+                        <i class="fas fa-plus-circle mr-2"></i> Nueva Evaluación
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="mt-12 mb-16 text-center border-t border-slate-100 pt-8">
+            <p class="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] mb-4">Proyecto Desarrollado Por
+            </p>
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+                <div class="group">
+                    <p class="text-sm font-bold text-slate-800 tracking-tight group-hover:text-black transition-colors">
+                        Santiago Arbelaez Contreras</p>
+                    <div class="h-0.5 w-0 group-hover:w-full bg-black transition-all duration-300 mx-auto mt-1"></div>
+                </div>
+                <div class="hidden sm:block w-1.5 h-1.5 bg-slate-200 rounded-full"></div>
+                <div class="group">
+                    <p class="text-sm font-bold text-slate-800 tracking-tight group-hover:text-black transition-colors">
+                        Federico Alvarez Muñoz</p>
+                    <div class="h-0.5 w-0 group-hover:w-full bg-black transition-all duration-300 mx-auto mt-1"></div>
+                </div>
+            </div>
+            <p class="text-slate-400 text-[11px] mt-8 font-medium italic">© 2026 PEC - Inteligencia Artificial</p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const formContainer = document.getElementById('form-container');
+        const loading = document.getElementById('loading');
+        const resultContainer = document.getElementById('result-container');
+        const predictionText = document.getElementById('prediction-text');
+        const predictionBadge = document.getElementById('prediction-badge');
+        const agentReport = document.getElementById('agent-report');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+
+            formContainer.classList.add('hidden');
+            loading.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                // UI Update
+                predictionText.innerText = result.prediction.toUpperCase();
+
+                // Reset styling
+                predictionBadge.className = 'bg-black text-white p-10 rounded-[32px] shadow-2xl relative overflow-hidden';
+                predictionText.className = 'text-5xl font-black italic tracking-tighter';
+
+                if (result.prediction.includes('LIVED')) {
+                    predictionText.classList.add('text-emerald-400');
+                } else if (result.prediction.includes('DIED')) {
+                    predictionText.classList.add('text-rose-400');
+                } else if (result.prediction.includes('EUTHANIZED')) {
+                    predictionText.classList.add('text-amber-400');
+                }
+
+                agentReport.innerText = result.report;
+
+                loading.classList.add('hidden');
+                resultContainer.classList.remove('hidden');
+                resultContainer.classList.add('result-animate');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            } catch (err) {
+                alert('Error al conectar con el servidor IA');
+                resetForm();
+            }
+        };
+
+        function resetForm() {
+            formContainer.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+            loading.classList.add('hidden');
+            form.reset();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/static/sw.js');
+        }
+    </script>
+</body>
+
+</html>

@@ -127,37 +127,53 @@ async def predict(data: ClinicalData):
 def generate_ai_report(data, result):
     if not GROQ_API_KEY: return f"Predicción: {result}.", "ANÁLISIS MANUAL"
     
+    # Contexto dinámico según el riesgo
+    es_critico = any(x in result.upper() for x in ["DIED", "MUERE", "EUTANASIA", "EUTHANIZED"])
+    
     prompt = f"""
-    Analiza este caso de cólico equino:
-    - Pulso: {data.pulso} bpm, Hematocrito: {data.volumen_celular}%, Dolor: {data.dolor}/5.
-    - Pronóstico del Modelo: {result}.
+    ESTRATEGIA MÉDICA VETERINARIA (CÓLICO EQUINO):
+    - Constantes: {data.pulso} bpm, PCV: {data.volumen_celular}%, Temp: {data.temp_rectal}°C.
+    - Estado Clínico: Dolor {data.dolor}/5, Mucosas {data.mucosas}.
+    - Pronóstico del Modelo V7: {result}.
 
-    INSTRUCCIONES:
-    1. Recomienda 'CIRUGÍA RECOMENDADA' o 'TRATAMIENTO MÉDICO' basado en los datos.
-    2. Genera un informe breve de 3 párrafos.
-    Empieza siempre con: 'RECOMENDACIÓN: [Respuesta]'
+    {"[!] ALERTA: PRONÓSTICO DE ALTA MORTALIDAD. Análisis de choque endotóxico requerido." if es_critico else ""}
+
+    INSTRUCCIONES PARA EL AGENTE:
+    1. Define la ruta crítica: 'CIRUGÍA RECOMENDADA' o 'TRATAMIENTO MÉDICO'.
+    2. Realiza un análisis FISIOPATOLÓGICO extenso (Mínimo 4 párrafos completos).
+    3. Explica la relación entre la hipovolemia (PCV), el dolor y la viabilidad intestinal.
+    4. Si el pronóstico es reservado ({result}), detalla las complicaciones esperadas (SIRS, Isquemia, Fallo orgánico) y justifica científicamente la intervención sugerida.
+    5. Usa terminología técnica profesional (Vet).
+
+    RESPUESTA REQUERIDA (Formato Estricto):
+    RECOMENDACIÓN: [Respuesta]
+    INFORME CLÍNICO ESTRATÉGICO:
+    [Contenido detallado y completo]
     """
     
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {
         "model": "llama-3.1-70b-versatile",
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2
+        "temperature": 0.3
     }
     
     try:
-        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=12)
+        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=15)
         if response.status_code == 200:
             full_text = response.json()['choices'][0]['message']['content']
             
-            # Simple extraction for the UI badge
-            if "CIRUGÍA" in full_text.upper()[:60]:
+            # Extracción inteligente del encabezado para el badge UI
+            decision = "CONSULTA MÉDICA"
+            upper_content = full_text.upper()
+            if "CIRUGÍA" in upper_content.split('\n')[0] or "QUIRÚRGICA" in upper_content.split('\n')[0]:
                 decision = "CIRUGÍA RECOMENDADA"
-            else:
+            elif "MÉDICO" in upper_content.split('\n')[0]:
                 decision = "TRATAMIENTO MÉDICO"
+                
             return full_text, decision
-    except:
-        pass
+    except Exception as e:
+        logger.error(f"Error en reporte IA: {e}")
     
     return f"Análisis {result}.", "CONSULTA VETERINARIA"
 

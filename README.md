@@ -15,6 +15,7 @@
 
 
 ## 📋 **PENDIENTE IMPLEMENTACION DEL CHAT CON EL AGENTE**
+- graficos de overfiting con redes neurales y arboles
 
 ---
 

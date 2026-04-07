@@ -47,7 +47,7 @@ if os.path.exists(MODEL_PATH):
     except Exception as e:
         logger.error(f"❌ Error loading model V7: {e}")
 
-GROQ_API_KEY = os.environ.get("GROQ_API_KEY") # Debe configurarse en el Dashboard de Vercel
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY") 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 class ClinicalData(BaseModel):
@@ -125,57 +125,68 @@ async def predict(data: ClinicalData):
         return {"error": str(e)}
 
 def generate_ai_report(data, result):
-    if not GROQ_API_KEY: return f"Predicción: {result}.", "ANÁLISIS MANUAL"
+    if not GROQ_API_KEY: 
+        logger.error("❌ GROQ_API_KEY is MISSING in environment")
+        return f"Provisional: {result}. Recomendamos consulta urgente.", "CONSULTA VETERINARIA"
     
-    # Contexto dinámico según el riesgo
+    # Contexto dinámico
     es_critico = any(x in result.upper() for x in ["DIED", "MUERE", "EUTANASIA", "EUTHANIZED"])
     
     prompt = f"""
-    ESTRATEGIA MÉDICA VETERINARIA (CÓLICO EQUINO):
-    - Constantes: {data.pulso} bpm, PCV: {data.volumen_celular}%, Temp: {data.temp_rectal}°C.
-    - Estado Clínico: Dolor {data.dolor}/5, Mucosas {data.mucosas}.
-    - Pronóstico del Modelo V7: {result}.
+    ESTRATEGIA MÉDICA VETERINARIA CRÍTICA:
+    - Paciente: Equino con Pulso {data.pulso} bpm, PCV {data.volumen_celular}%, Dolor {data.dolor}/5.
+    - Pronóstico Modelado (V7): {result}.
 
-    {"[!] ALERTA: PRONÓSTICO DE ALTA MORTALIDAD. Análisis de choque endotóxico requerido." if es_critico else ""}
+    [OBJETIVO]: Generar una estrategia clínica EXTENSA y TÉCNICA.
 
-    INSTRUCCIONES PARA EL AGENTE:
-    1. Define la ruta crítica: 'CIRUGÍA RECOMENDADA' o 'TRATAMIENTO MÉDICO'.
-    2. Realiza un análisis FISIOPATOLÓGICO extenso (Mínimo 4 párrafos completos).
-    3. Explica la relación entre la hipovolemia (PCV), el dolor y la viabilidad intestinal.
-    4. Si el pronóstico es reservado ({result}), detalla las complicaciones esperadas (SIRS, Isquemia, Fallo orgánico) y justifica científicamente la intervención sugerida.
-    5. Usa terminología técnica profesional (Vet).
+    INSTRUCCIONES:
+    1. Define 'CIRUGÍA RECOMENDADA' o 'TRATAMIENTO MÉDICO'.
+    2. Desarrolla un análisis FISIOPATOLÓGICO de al menos 4 párrafos largos.
+    3. Trata temas como: Desequilibrio electrolítico, Isquemia intestinal, Endotoxemia y Shock hipovolémico.
+    4. Explica por qué el pronóstico es {result} y qué medidas heroicas se pueden tomar.
+    5. Usa un tono de especialista de cuidados intensivos.
 
-    RESPUESTA REQUERIDA (Formato Estricto):
-    RECOMENDACIÓN: [Respuesta]
-    INFORME CLÍNICO ESTRATÉGICO:
-    [Contenido detallado y completo]
+    FORMATO OBLIGATORIO:
+    RECOMENDACIÓN: [Escribe aquí si es CIRUGÍA o MÉDICO]
+    ANÁLISIS PROFUNDO:
+    [Mínimo 400 palabras de análisis clínico]
     """
     
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
     payload = {
-        "model": "llama-3.1-70b-versatile",
+        "model": "llama-3.1-8b-instant", # Cambiado a 8b para mayor velocidad y confiabilidad
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.3
+        "temperature": 0.2,
+        "max_tokens": 1000
     }
     
     try:
-        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=15)
+        logger.info("📡 Enviando consulta a Groq (8b-instant)...")
+        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=20)
+        
         if response.status_code == 200:
             full_text = response.json()['choices'][0]['message']['content']
+            logger.info("✅ Respuesta de IA recibida correctamente.")
             
-            # Extracción inteligente del encabezado para el badge UI
-            decision = "CONSULTA MÉDICA"
-            upper_content = full_text.upper()
-            if "CIRUGÍA" in upper_content.split('\n')[0] or "QUIRÚRGICA" in upper_content.split('\n')[0]:
+            # Extracción robusta de la recomendación
+            decision = "CONSULTA VETERINARIA"
+            if "CIRUGÍA" in full_text.upper():
                 decision = "CIRUGÍA RECOMENDADA"
-            elif "MÉDICO" in upper_content.split('\n')[0]:
+            elif "MÉDICO" in full_text.upper():
                 decision = "TRATAMIENTO MÉDICO"
+            
+            # Si el modelo dice que va a morir, enfatizar la urgencia quirúrgica si aplica
+            if es_critico and "CIRUGÍA" in full_text.upper():
+                decision = "🔴 CIRUGÍA INMEDIATA"
                 
             return full_text, decision
+        else:
+            logger.error(f"❌ Error API Groq: {response.status_code} - {response.text}")
+            
     except Exception as e:
-        logger.error(f"Error en reporte IA: {e}")
+        logger.error(f"❌ Excepción en reporte IA: {e}")
     
-    return f"Análisis {result}.", "CONSULTA VETERINARIA"
+    return f"Análisis de emergencia para pronóstico {result}. Por favor, evalúe intervención quirúrgica inmediata si el dolor persiste.", "STADO CRÍTICO"
 
 if __name__ == "__main__":
     import uvicorn

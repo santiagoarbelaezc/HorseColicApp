@@ -2,10 +2,10 @@ fastapi
 uvicorn
 jinja2
 python-multipart
+scikit-learn
 joblib
 pandas
 numpy
-scikit-learn
 requests
-imbalanced-learn
 lightgbm
+imbalanced-learn

@@ -16,7 +16,7 @@
 
 ## 📋 **PENDIENTE IMPLEMENTACION DEL CHAT CON EL AGENTE**
 - graficos de overfiting con redes neurales y arboles
-- 
+- pendiente mejora del modelo al 85 % o mas
 
 ---
 

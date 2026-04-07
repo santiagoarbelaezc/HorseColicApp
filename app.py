@@ -114,21 +114,52 @@ async def predict(data: ClinicalData):
         else:
             prediction = "Error: Modelo V7 no cargado (Pendiente entrenamiento local)"
 
-        report = generate_ai_report(data, prediction)
-        return {"prediction": prediction, "report": report}
+        report, decision = generate_ai_report(data, prediction)
+        return {
+            "prediction_outcome": prediction,
+            "prediction_decision": decision,
+            "report": report
+        }
     except Exception as e:
         logger.error(f"V7 Prediction Error: {e}")
-        return {"prediction": "Error", "report": f"System Error: {str(e)}"}
+        return {"error": str(e)}
 
 def generate_ai_report(data, result):
-    if not GROQ_API_KEY: return f"Predicción: {result}."
-    prompt = f"Informe veterinario: Pulso {data.pulso}, Hematocrito {data.volumen_celular}, Dolor {data.dolor}/5, Heces {data.heces}, Mucosas {data.mucosas}. Predicción: {result}. Explica el diagnóstico brevemente."
+    if not GROQ_API_KEY: return f"Predicción: {result}.", "ANÁLISIS MANUAL"
+    
+    prompt = f"""
+    Analiza este caso de cólico equino:
+    - Pulso: {data.pulso} bpm, Hematocrito: {data.volumen_celular}%, Dolor: {data.dolor}/5.
+    - Pronóstico del Modelo: {result}.
+
+    INSTRUCCIONES:
+    1. Recomienda 'CIRUGÍA RECOMENDADA' o 'TRATAMIENTO MÉDICO' basado en los datos.
+    2. Genera un informe breve de 3 párrafos.
+    Empieza siempre con: 'RECOMENDACIÓN: [Respuesta]'
+    """
+    
     headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-    payload = {"model": "llama-3.1-8b-instant", "messages": [{"role": "user", "content": prompt}], "temperature": 0.2}
+    payload = {
+        "model": "llama-3.1-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.2
+    }
+    
     try:
-        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=10)
-        return response.json()['choices'][0]['message']['content'] if response.status_code == 200 else f"Análisis {result}."
-    except: return f"Análisis {result}."
+        response = requests.post(GROQ_URL, headers=headers, json=payload, timeout=12)
+        if response.status_code == 200:
+            full_text = response.json()['choices'][0]['message']['content']
+            
+            # Simple extraction for the UI badge
+            if "CIRUGÍA" in full_text.upper()[:60]:
+                decision = "CIRUGÍA RECOMENDADA"
+            else:
+                decision = "TRATAMIENTO MÉDICO"
+            return full_text, decision
+    except:
+        pass
+    
+    return f"Análisis {result}.", "CONSULTA VETERINARIA"
 
 if __name__ == "__main__":
     import uvicorn

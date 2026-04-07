@@ -13,6 +13,11 @@
 
 ---
 
+
+## 📋 **PENDIENTE IMPLEMENTACION DEL CHAT CON EL AGENTE**
+
+---
+
 ## 📋 **Descripción del Proyecto**
 
 **EquineHealth AI Pro** es una herramienta de soporte de decisiones clínicas enfocada en la detección temprana y el pronóstico del cólico equino. Utiliza un enfoque híbrido de **Inteligencia Artificial Dual**: un motor estadístico de precisión (Random Forest/Stacking) para predecir la supervivencia y un motor de razonamiento (LLaMA 3.1 via Groq) para recomendar planes de acción quirúrgicos o médicos.

@@ -101,7 +101,7 @@ El corazón de la aplicación es un panel de resultados que separa el **Pronóst
 <div align="center">
 **Santiago Arbelaez Contreras**
 
-Junior Full Stack Developer / AI Enthusiast
+Junior Full Stack Developer 
 
 Estudiante de Ingeniería de Sistemas – Universidad del Quindío
 

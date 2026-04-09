@@ -36,6 +36,7 @@
 - 🌲 Análisis de overfitting también para **Random Forest**
 - ⚡ **El análisis de overfitting se realiza DESPUÉS de Optuna**
 - 🎲 Considerar el **Grado de Desorden** (entropía / criterio Gini)
+- Reviar SelectKBest
 
 
 ---

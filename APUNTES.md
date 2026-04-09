@@ -30,11 +30,13 @@
 > Estado actual del proyecto — pendientes obligatorios para la entrega.
 
 - 📸 Imágenes y gráficos requeridos para la entrega
+- 🎲 Se tiene que revisar las variables con mayor relevancia en la clase
 - 📉 **Gráfico de sobreajuste OBLIGATORIO** para Árboles de Decisión y Redes Neuronales
 - 🎥 **Video explicación** de cómo se realizó el agente (chatbot)
 - 🌲 Análisis de overfitting también para **Random Forest**
 - ⚡ **El análisis de overfitting se realiza DESPUÉS de Optuna**
 - 🎲 Considerar el **Grado de Desorden** (entropía / criterio Gini)
+
 
 ---
 

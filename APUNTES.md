@@ -182,15 +182,15 @@ dump(best_model, "/content/drive/MyDrive/titanic_model.pkl")
 
 | Componente | Estado | Nota |
 |------------|--------|------|
-| EDA completo | ✅ Listo | Hipótesis H2–H10 verificadas |
-| Pipelines base (5 modelos) | ✅ Listo | SMOTE + CorrelationFilter + SelectKBest |
-| Métricas y matrices de confusión | ✅ Listo | Accuracy, Precision, Recall, F1 |
+| EDA completo | ⏳ En curso | Hipótesis H2–H10 verificadas |
+| Pipelines base (5 modelos) | ⏳ En curso | SMOTE + CorrelationFilter + SelectKBest |
+| Métricas y matrices de confusión | ⏳ En curso | Accuracy, Precision, Recall, F1 |
 | Optuna (ajuste hiperparámetros) | ⏳ En curso | Requiere análisis de overfitting post-Optuna |
 | **Gráfico sobreajuste (DT + NN)** | ❌ Falta | **OBLIGATORIO para la entrega** |
-| Stacking Ensemble | ✅ Listo | Con threshold tuning |
-| SHAP + LIME | ✅ Listo | Global y local implementados |
+| Stacking Ensemble | ⏳ En curso | Con threshold tuning |
+| SHAP + LIME | ⏳ En curso | Global y local implementados |
 | **Video explicación del agente** | ❌ Falta | **Grabar video del chatbot** |
-| Serialización del modelo | ✅ Listo | joblib en Google Drive |
+| Serialización del modelo | ⏳ En curso | joblib en Google Drive |
 
 ---
 

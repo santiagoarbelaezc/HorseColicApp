@@ -39,11 +39,11 @@
 - Reviar SelectKBest
 
 ## Apuntes Clase
-Tipos de Clasificador bayesiano
-GaussianNB - variables continuas
-MultinomialNB - frecuencia de palabras
-BenoulliNB . Variables binarias
-ComplementNB - Variante para clases desbalanceadas
+- Tipos de Clasificador bayesiano
+- GaussianNB - variables continuas
+- MultinomialNB - frecuencia de palabras
+- BenoulliNB . Variables binarias
+- ComplementNB - Variante para clases desbalanceadas
 
 ---
 
